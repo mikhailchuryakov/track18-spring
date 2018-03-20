@@ -24,10 +24,12 @@ public class Encoder {
     public String encode(@NotNull Map<Character, Character> cypherTable, @NotNull String text) {
         char[] symbols = text.toLowerCase().toCharArray();
         StringBuilder sb = new StringBuilder();
+
         for(char sym : symbols){
             if (sym >= 'a' && sym <= 'z') sb.append(cypherTable.get(sym));
             else sb.append(sym);
         }
+
         return sb.toString();
     }
 }

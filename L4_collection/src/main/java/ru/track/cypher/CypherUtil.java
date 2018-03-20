@@ -22,7 +22,8 @@ public class CypherUtil {
     public static Map<Character, Character> generateCypher() {
         Map<Character, Character> cypher = new HashMap<>();
         char[] symbols = SYMBOLS.toCharArray();
-        int i = 5;
+        int i = 5
+                ;
         for (char sym : symbols){
             if (i == symbols.length) i = 0;
             cypher.put(sym, symbols[i]);
