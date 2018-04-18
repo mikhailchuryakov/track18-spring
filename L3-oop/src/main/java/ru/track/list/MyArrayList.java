@@ -1,6 +1,5 @@
 package ru.track.list;
 
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 /**
@@ -12,9 +11,10 @@ import java.util.NoSuchElementException;
  */
 public class MyArrayList extends List {
     private int[] array;
+    private int length;
 
     public MyArrayList() {
-        array = new int[0];
+        array = new int[10];
     }
 
     public MyArrayList(int capacity) {
@@ -23,31 +23,35 @@ public class MyArrayList extends List {
 
     @Override
     void add(int item) {
-        int[] arr = new int[array.length + 1];
-        System.arraycopy(array, 0, arr, 0, array.length);
-        arr[array.length] = item;
-        array = arr;
+        if(length < array.length){
+            array[length] = item;
+        }
+        else {
+            int[] arr = new int[length * 2 + 1]; // 1 - in case capacity = 0
+            System.arraycopy(array, 0, arr, 0, length);
+            arr[length] = item;
+            array = arr;
+        }
+        length++;
     }
 
     @Override
     int remove(int idx) throws NoSuchElementException {
-        if (idx > array.length - 1) throw new NoSuchElementException();
-        int[] arr = new int[array.length - 1];
+        if (idx > length) throw new NoSuchElementException();
         int item = array[idx];
-        System.arraycopy(array, 0, arr, 0, idx);
-        System.arraycopy(array, idx + 1, arr, idx, array.length - 1 - idx);
-        array = arr;
+        System.arraycopy(array, idx +  1, array, idx, length - idx);
+        length--;
         return item;
     }
 
     @Override
     int get(int idx) throws NoSuchElementException {
-        if (idx > array.length - 1) throw new NoSuchElementException();
+        if (idx >= length) throw new NoSuchElementException();
         return array[idx];
     }
 
     @Override
     int size() {
-        return array.length;
+        return length;
     }
 }
