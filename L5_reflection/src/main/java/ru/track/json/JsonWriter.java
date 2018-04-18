@@ -60,9 +60,9 @@ public class JsonWriter {
     private static String toJsonArray(@NotNull Object object) throws IllegalAccessException {
         int length = Array.getLength(object);
         StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             sb.append(toJson(Array.get(object, i)));
-            if(i != length - 1){
+            if (i != length - 1) {
                 sb.append(",");
             }
         }
@@ -90,7 +90,7 @@ public class JsonWriter {
         Map<String, String> jsonMap = new LinkedHashMap<>();
         Iterator key = map.keySet().iterator();
         Iterator values = map.values().iterator();
-        for (int i = 0; key.hasNext(); i++){
+        for (int i = 0; key.hasNext(); i++) {
             jsonMap.put(key.next().toString(), toJson(values.next()));
         }
         return formatObject(jsonMap);
@@ -117,10 +117,11 @@ public class JsonWriter {
         Class clazz = object.getClass();
         Map<String, String> jsonObject = new LinkedHashMap<>();
         Field[] fields = clazz.getDeclaredFields();
-        for(Field field: fields){
+        for (Field field : fields) {
             field.setAccessible(true);
-            if(field.get(object) != null) {
-                jsonObject.put(field.getName(), toJson(field.get(object)));
+            if (field.get(object) != null || clazz.getAnnotation(JsonNullable.class) != null) {
+                SerializedTo serializedTo = field.getAnnotation(SerializedTo.class);
+                jsonObject.put(serializedTo != null ? serializedTo.value() : field.getName(), toJson(field.get(object)));
             }
         }
         return formatObject(jsonObject);
