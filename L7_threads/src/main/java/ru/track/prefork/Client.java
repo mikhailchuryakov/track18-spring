@@ -2,6 +2,8 @@ package ru.track.prefork;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.List;
 import java.util.Scanner;
 
 import org.slf4j.Logger;
@@ -23,65 +25,88 @@ public class Client {
         log.info("Success connection to {}", host);
 
         WriteThread wt = new WriteThread(socket);
-        ListenThread lt = new ListenThread(socket);
+        ListenThread lt = new ListenThread(socket, wt);
+        wt.setListen(lt);
         wt.start();
         lt.start();
+
+        wt.join();
+        lt.join();
+
+        socket.close();
     }
 
 
     public class WriteThread extends Thread {
-        private ObjectOutputStream out;
         private Socket socket;
+        private ListenThread listen;
 
         WriteThread(Socket socket) {
             this.socket = socket;
         }
 
+        public void setListen(ListenThread listen) {
+            this.listen = listen;
+        }
 
         @Override
         public void run() {
-            try {
-                out = new ObjectOutputStream(socket.getOutputStream());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
+            try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream())) {
                 Scanner scanner = new Scanner(System.in);
+
                 while (!isInterrupted()) {
                     String line = scanner.nextLine();
 
-                    Message msg = new Message(1, line);
-                    out.writeObject(msg);
-                    out.flush();
+                    if (line.equals("EXIT")) {
+                        break;
+                    }
+                    try {
+                        Message msg = new Message(1, line);
+                        out.writeObject(msg);
+                        out.flush();
+                    } catch (SocketException e) {
+                        break;
+                    }
                 }
+                listen.interrupt();
+            } catch (SocketException ignored) {
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new UncheckedIOException(e);
             }
         }
     }
 
     public class ListenThread extends Thread {
-        private ObjectInputStream in;
         private Socket socket;
+        private WriteThread writer;
 
-        ListenThread(Socket socket) {
+        ListenThread(Socket socket, WriteThread writer) {
             this.socket = socket;
+            this.writer = writer;
         }
 
         @Override
         public void run() {
-
-            try {
-                in = new ObjectInputStream(socket.getInputStream());
+            try (ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
                 while (!isInterrupted()) {
-                    Message msg = (Message) in.readObject();
-                    if (msg == null) {
+                    try {
+                        Message msg = (Message) in.readObject();
+                        if (msg == null) {
+                            break;
+                        }
+                        System.out.println(msg.getData());
+                    } catch (SocketException | EOFException e) {
                         break;
                     }
-                    System.out.println(msg.getData());
                 }
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
+
+                System.out.println("DISCONNECT. Press ENTER.");
+                writer.interrupt();
+            } catch (SocketException ignored) {
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException();
             }
         }
     }
