@@ -51,7 +51,9 @@ public class Server {
 
             WorkingThread wt = new WorkingThread(socket, id.get());
             workingThreadList.add(wt);
-            wt.setName(String.format("Client[%d]@%s:%d", id.getAndIncrement(), socket.getLocalAddress().toString().replace("/", ""), socket.getPort()));
+            wt.setName(String.format("Client[%d]@%s:%d", id.getAndIncrement(),
+                    socket.getLocalAddress().toString().replace("/", ""), socket.getPort()));
+
             log.info("{} is accepted", wt.getName());
 
             wt.start();
@@ -104,7 +106,11 @@ public class Server {
                         Date date = new Date();
                         date.setTime(msg.getTs());
 
-                        String clientData = String.format(outputNameFormat, new SimpleDateFormat("hh:mm:ss").format(date), socket.getLocalAddress().toString().replace("/", ""), socket.getPort(), msg.getData());
+                        String clientData = String.format(outputNameFormat,
+                                new SimpleDateFormat("hh:mm:ss").format(date),
+                                socket.getLocalAddress().toString().replace("/", ""),
+                                socket.getPort(), msg.getData());
+
                         System.out.println(clientData);
 
                         msg.setData(clientData);
@@ -117,7 +123,8 @@ public class Server {
 
                 for (WorkingThread wt : workingThreadList) {
                     if (wt.getId() > getId()) {
-                        wt.setName(wt.getName().replace(String.format("[%s]", wt.getId()), String.format("[%s]", wt.id.decrementAndGet())));
+                        wt.setName(wt.getName().replace(String.format("[%s]", wt.getId()),
+                                String.format("[%s]", wt.id.decrementAndGet())));
                     }
                 }
                 changeId();
