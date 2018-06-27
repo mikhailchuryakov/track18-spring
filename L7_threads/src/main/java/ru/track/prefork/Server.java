@@ -6,6 +6,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -67,7 +69,7 @@ public class Server {
 
         ObjectInputStream in;
         ObjectOutputStream out;
-        private String outputNameFormat = "Client@%s:%d>%s";
+        private String outputNameFormat = "%s>>Client@%s:%d>%s";
 
         WorkingThread(Socket socket, long id) throws IOException {
             this.socket = socket;
@@ -88,7 +90,7 @@ public class Server {
                             System.out.println("Message is null");
                             break;
                         }
-                        if (msg.getTs() == 0 || msg.getData().equals("EXIT")) {
+                        if (msg.getData().equals("EXIT")) {
                             for (WorkingThread wt : workingThreadList) {
                                 if (wt.getId() > Thread.currentThread().getId()) {
                                     id.decrementAndGet();
@@ -98,12 +100,15 @@ public class Server {
                             Thread.currentThread().join();
                             break;
                         }
-                        String clientData = String.format(outputNameFormat, socket.getLocalAddress().toString().replace("/", ""), socket.getPort(), msg.getData());
+
+                        Date date = new Date();
+                        date.setTime(msg.getTs());
+
+                        String clientData = String.format(outputNameFormat, new SimpleDateFormat("hh:mm:ss").format(date), socket.getLocalAddress().toString().replace("/", ""), socket.getPort(), msg.getData());
                         System.out.println(clientData);
 
-                        if (msg.getTs() == 1) {
-                            msg.setData(clientData);
-                        }
+                        msg.setData(clientData);
+
                         sendAll(msg.getData());
                     } catch (SocketException | EOFException e) {
                         break;

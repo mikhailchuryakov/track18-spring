@@ -3,6 +3,7 @@ package ru.track.prefork;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
@@ -61,7 +62,7 @@ public class Client {
                         break;
                     }
                     try {
-                        Message msg = new Message(1, line);
+                        Message msg = new Message(new Date().getTime(), line);
                         out.writeObject(msg);
                         out.flush();
                     } catch (SocketException e) {
